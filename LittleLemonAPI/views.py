@@ -3,11 +3,15 @@ from django.contrib.auth.models import User, Group
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .models import MenuItem,Category,Cart,Order,OrderItem
-from .serializers import MenuItemSerializer, CategorySerializer, CartSerializer,OrderSerializer,OrderItemSerializer
+from .models import Menu,Category,Cart,Booking,BookingItem
+from .serializers import MenuSerializer, CategorySerializer, CartSerializer,BookingSerializer,BookingItemSerializer
 from rest_framework.permissions import IsAuthenticated,BasePermission
 import datetime
+from django.shortcuts import render
 
+
+def index(request):
+    return render(request, 'index.html')
 
 
 class ManagerGroupPermission(BasePermission):
@@ -108,9 +112,9 @@ class singleCategoryView(generics.RetrieveUpdateDestroyAPIView):
 
 
     
-class menuItemView(generics.ListCreateAPIView):
-    queryset = MenuItem.objects.all()
-    serializer_class = MenuItemSerializer
+class menuView(generics.ListCreateAPIView):
+    queryset = Menu.objects.all()
+    serializer_class = MenuSerializer
     ordering_fileds = ['price','title','category']
     filterset_fields = ['price','feature','category']
     search_fields = ['category','title']
@@ -121,9 +125,9 @@ class menuItemView(generics.ListCreateAPIView):
         return [IsAuthenticated(), ManagerGroupPermission()]
 
 
-class singleMenuItemView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = MenuItem.objects.all()
-    serializer_class = MenuItemSerializer
+class singleMenuView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Menu.objects.all()
+    serializer_class = MenuSerializer
 
     def get_permissions(self):
         if(self.request.method=='GET'):
@@ -153,29 +157,29 @@ class cartView(generics.GenericAPIView):
         Cart.objects.filter(user=user).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-# Order view 
-class OrderView(generics.ListAPIView):
-    serializer_class = OrderSerializer
+# Booking view 
+class BookingView(generics.ListAPIView):
+    serializer_class = BookingSerializer
 
     def get_queryset(self):
         user = self.request.user
         if user.groups.filter(name='DeliveryCrew').exists():
-            orders = Order.objects.filter(delivery_crew=user)
+            bookings = Booking.objects.filter(delivery_crew=user)
         else:
-            orders = Order.objects.filter(user=user)
-        return orders
+            bookings = Booking.objects.filter(user=user)
+        return bookings
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         data = serializer.data
 
-        # Retrieve related OrderItem objects for each Order
-        for i, order_data in enumerate(data):
-            order = queryset[i]
-            order_items = order.orderitem_set.all()
-            order_item_serializer = OrderItemSerializer(order_items, many=True)
-            order_data['order_items'] = order_item_serializer.data
+        # Retrieve related BookingItem objects for each Booking
+        for i, booking_data in enumerate(data):
+            booking = queryset[i]
+            booking_items = booking.bookingitem_set.all()
+            booking_item_serializer = BookingItemSerializer(booking_items, many=True)
+            booking_data['booking_items'] = booking_item_serializer.data
 
         return Response(data)
 
@@ -183,45 +187,45 @@ class OrderView(generics.ListAPIView):
         user = self.request.user
         cart_items = Cart.objects.filter(user=user)
 
-        # Create the order instance
-        order_data = {
+        # Create the Booking instance
+        booking_data = {
             'user': user.pk,
             'delivery_crew': None,
             'status': False,
             'total': 0,
             'date': datetime.date.today()
         }
-        order_serializer = OrderSerializer(data=order_data)
-        if order_serializer.is_valid():
-            order = order_serializer.save()
+        booking_serializer = BookingSerializer(data=booking_data)
+        if booking_serializer.is_valid():
+            booking = booking_serializer.save()
         else:
-            errors = order_serializer.errors
+            errors = booking_serializer.errors
             return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
-        order_items = []
+        booking_items = []
         for cart_item in cart_items:
-            order_item_data = {
-                'order_id': order.pk,
-                'menuitem': cart_item.menuitem.pk,
+            booking_item_data = {
+                'booking_id': booking.pk,
+                'menu': cart_item.menu.pk,
                 'quantity': cart_item.quantity,
                 'unit_price': cart_item.unit_price,
                 'price': cart_item.price
             }
-            order_item_serializer = OrderItemSerializer(data=order_item_data)
-            if order_item_serializer.is_valid():
-                order_item_serializer.save()
-                order_items.append(order_item_serializer.data)
+            booking_item_serializer = BookingItemSerializer(data=booking_item_data)
+            if booking_item_serializer.is_valid():
+                booking_item_serializer.save()
+                booking_items.append(booking_item_serializer.data)
             else:
-                errors = order_item_serializer.errors
+                errors = booking_item_serializer.errors
                 return Response(errors, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(order_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(booking_serializer.data, status=status.HTTP_201_CREATED)
 
 
 
-class singleOrderView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
+class singleBookingView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
 
     def get_permissions(self):
         if(self.request.method=='GET'):

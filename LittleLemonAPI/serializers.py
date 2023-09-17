@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import MenuItem,Category,Cart,Order,OrderItem
+from .models import Menu,Category,Cart,Booking,BookingItem
 from rest_framework.validators import UniqueTogetherValidator
 from django.contrib.auth.models import User
 
@@ -12,17 +12,17 @@ class CategorySerializer(serializers.ModelSerializer):
 
 # Menu Serializer
 
-class MenuItemSerializer(serializers.ModelSerializer):
+class MenuSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)  # Nested CategorySerializer for GET request
     category_id = serializers.IntegerField(
         write_only=True
     )
     class Meta:
-        model = MenuItem
+        model = Menu
         fields = ['id','title','price','featured','category','category_id']
         validators=[
         UniqueTogetherValidator(
-        queryset=MenuItem.objects.all(),
+        queryset=Menu.objects.all(),
         fields=['title', 'category_id']
         )
         ]
@@ -30,33 +30,33 @@ class MenuItemSerializer(serializers.ModelSerializer):
 # Cart Serializer
 
 class CartSerializer(serializers.ModelSerializer):
-    menuitem = MenuItemSerializer(read_only=True)  
-    menuitem_id = serializers.IntegerField(
+    menu = MenuSerializer(read_only=True)  
+    menu_id = serializers.IntegerField(
         write_only=True
     )
     class Meta:
         model = Cart
-        fields = ['user','menuitem','quantity','unit_price','price',"menuitem_id"]
+        fields = ['user','menu','quantity','unit_price','price',"menu_id"]
 
-# Order Serializer
+# Booking Serializer
 
-class OrderSerializer(serializers.ModelSerializer):
+class BookingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Order
+        model = Booking
         fields = ['id','user', 'delivery_crew', 'status', 'total', 'date']
 
 
 
-class OrderItemSerializer(serializers.ModelSerializer):
-    order = OrderSerializer(read_only=True)  # Nested OrderSerializer for GET request
-    order_id = serializers.PrimaryKeyRelatedField(
-        queryset=Order.objects.all(),
+class BookingItemSerializer(serializers.ModelSerializer):
+    booking = BookingSerializer(read_only=True)  # Nested BookingSerializer for GET request
+    booking_id = serializers.PrimaryKeyRelatedField(
+        queryset=Booking.objects.all(),
         write_only=True,
-        source='order'
+        source='vooking'
     )
 
     class Meta:
-        model = OrderItem
-        fields = ['order', 'order_id', 'menuitem', 'quantity', 'unit_price', 'price']
+        model = BookingItem
+        fields = ['booking', 'vooking_id', 'menu', 'quantity', 'unit_price', 'price']
 
 

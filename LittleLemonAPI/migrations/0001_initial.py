@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='MenuItem',
+            name='Menu',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('title', models.CharField(db_index=True, max_length=255)),
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Order',
+            name='Booking',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('status', models.BooleanField(db_index=True, default=0)),
@@ -44,17 +44,17 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='OrderItem',
+            name='BookingItem',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('quantity', models.SmallIntegerField()),
                 ('unit_price', models.DecimalField(decimal_places=2, max_digits=6)),
                 ('price', models.DecimalField(decimal_places=2, max_digits=6)),
-                ('menuitem', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='LittleLemonAPI.menuitem')),
-                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('menu', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='LittleLemonAPI.menu')),
+                ('booking', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'unique_together': {('order', 'menuitem')},
+                'unique_together': {('booking', 'menu')},
             },
         ),
         migrations.CreateModel(
@@ -64,11 +64,11 @@ class Migration(migrations.Migration):
                 ('quantity', models.SmallIntegerField()),
                 ('unit_price', models.DecimalField(decimal_places=2, max_digits=6)),
                 ('price', models.DecimalField(decimal_places=2, max_digits=6)),
-                ('menuitem', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='LittleLemonAPI.menuitem')),
+                ('menu', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='LittleLemonAPI.menu')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'unique_together': {('menuitem', 'user')},
+                'unique_together': {('menu', 'user')},
             },
         ),
     ]
